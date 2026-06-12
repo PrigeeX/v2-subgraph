@@ -18,7 +18,6 @@ export enum NETWORK {
   MONAD = 'monad',
   OPTIMISM = 'optimism',
   PRIGEEX_ARBITRUM_SEPOLIA = 'prigeex-arbitrum-sepolia',
-  PRIGEEX_ARBITRUM_ONE = 'prigeex-arbitrum-one',
   ROBINHOOD = 'robinhood-mainnet',
   SONEIUM = 'soneium-mainnet',
   UNICHAIN = 'unichain-mainnet',
