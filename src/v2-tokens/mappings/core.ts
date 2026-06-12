@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 import { BigDecimal } from '@graphprotocol/graph-ts'
 
-import { Bundle, Pair, Token, UniswapFactory } from '../../../generated/schema'
+import { Bundle, Pair, Token, PrigeeXFactory } from '../../../generated/schema'
 import { Swap, Sync } from '../../../generated/templates/Pair/Pair'
 import { FACTORY_ADDRESS } from '../../common/chain'
 import { ALMOST_ZERO_BD, ONE_BI, ZERO_BD } from '../../common/constants'
@@ -11,7 +11,7 @@ import {
   updatePairHourData,
   updateTokenDayData,
   updateTokenHourData,
-  updateUniswapDayData,
+  updatePrigeeXDayData,
 } from '../../common/hourDayUpdates'
 import { findEthPerToken, getEthPriceInUSD, getTrackedLiquidityUSD, getTrackedVolumeUSD } from '../../common/pricing'
 import { updateTokenMinuteData } from './minuteUpdates'
@@ -26,13 +26,13 @@ export function handleSync(event: Sync): void {
   if (!token0 || !token1) {
     return
   }
-  let uniswap = UniswapFactory.load(FACTORY_ADDRESS)
-  if (!uniswap) {
+  let prigeex = PrigeeXFactory.load(FACTORY_ADDRESS)
+  if (!prigeex) {
     return
   }
 
   // reset factory liquidity by subtracting onluy tarcked liquidity
-  uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
+  prigeex.totalLiquidityETH = prigeex.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
 
   // reset token total liquidity amounts
   token0.totalLiquidity = token0.totalLiquidity.minus(pair.reserve0)
@@ -79,8 +79,8 @@ export function handleSync(event: Sync): void {
   pair.reserveUSD = pair.reserveETH.times(bundle.ethPrice)
 
   // use tracked amounts globally
-  uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.plus(trackedLiquidityETH)
-  uniswap.totalLiquidityUSD = uniswap.totalLiquidityETH.times(bundle.ethPrice)
+  prigeex.totalLiquidityETH = prigeex.totalLiquidityETH.plus(trackedLiquidityETH)
+  prigeex.totalLiquidityUSD = prigeex.totalLiquidityETH.times(bundle.ethPrice)
 
   // now correctly set liquidity amounts for each token
   token0.totalLiquidity = token0.totalLiquidity.plus(pair.reserve0)
@@ -112,7 +112,7 @@ export function handleSync(event: Sync): void {
   token1MinuteData.save()
   // save entities
   pair.save()
-  uniswap.save()
+  prigeex.save()
   token0.save()
   token1.save()
 }
@@ -188,33 +188,33 @@ export function handleSwap(event: Swap): void {
   pair.save()
 
   // update global values, only used tracked amounts for volume
-  let uniswap = UniswapFactory.load(FACTORY_ADDRESS)
-  if (!uniswap) {
+  let prigeex = PrigeeXFactory.load(FACTORY_ADDRESS)
+  if (!prigeex) {
     return
   }
-  uniswap.totalVolumeUSD = uniswap.totalVolumeUSD.plus(trackedAmountUSD)
-  uniswap.totalVolumeETH = uniswap.totalVolumeETH.plus(trackedAmountETH)
-  uniswap.untrackedVolumeUSD = uniswap.untrackedVolumeUSD.plus(derivedAmountUSD)
-  uniswap.txCount = uniswap.txCount.plus(ONE_BI)
+  prigeex.totalVolumeUSD = prigeex.totalVolumeUSD.plus(trackedAmountUSD)
+  prigeex.totalVolumeETH = prigeex.totalVolumeETH.plus(trackedAmountETH)
+  prigeex.untrackedVolumeUSD = prigeex.untrackedVolumeUSD.plus(derivedAmountUSD)
+  prigeex.txCount = prigeex.txCount.plus(ONE_BI)
 
   // save entities
   pair.save()
   token0.save()
   token1.save()
-  uniswap.save()
+  prigeex.save()
 
   // update day entities
   let pairDayData = updatePairDayData(pair, event)
   let pairHourData = updatePairHourData(pair, event)
-  let uniswapDayData = updateUniswapDayData(event)
+  let prigeexDayData = updatePrigeeXDayData(event)
   let token0DayData = updateTokenDayData(token0 as Token, event)
   let token1DayData = updateTokenDayData(token1 as Token, event)
 
   // swap specific updating
-  uniswapDayData.dailyVolumeUSD = uniswapDayData.dailyVolumeUSD.plus(trackedAmountUSD)
-  uniswapDayData.dailyVolumeETH = uniswapDayData.dailyVolumeETH.plus(trackedAmountETH)
-  uniswapDayData.dailyVolumeUntracked = uniswapDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
-  uniswapDayData.save()
+  prigeexDayData.dailyVolumeUSD = prigeexDayData.dailyVolumeUSD.plus(trackedAmountUSD)
+  prigeexDayData.dailyVolumeETH = prigeexDayData.dailyVolumeETH.plus(trackedAmountETH)
+  prigeexDayData.dailyVolumeUntracked = prigeexDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
+  prigeexDayData.save()
 
   // swap specific updating for pair
   pairDayData.dailyVolumeToken0 = pairDayData.dailyVolumeToken0.plus(amount0Total)

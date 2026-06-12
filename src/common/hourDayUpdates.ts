@@ -8,35 +8,35 @@ import {
   Token,
   TokenDayData,
   TokenHourData,
-  UniswapDayData,
-  UniswapFactory,
+  PrigeeXDayData,
+  PrigeeXFactory,
 } from '../../generated/schema'
 import { PairHourData } from '../../generated/schema'
 import { FACTORY_ADDRESS } from './chain'
 import { ONE_BI, ZERO_BD, ZERO_BI } from './constants'
 
-export function updateUniswapDayData(event: ethereum.Event): UniswapDayData {
-  let uniswap = UniswapFactory.load(FACTORY_ADDRESS)!
+export function updatePrigeeXDayData(event: ethereum.Event): PrigeeXDayData {
+  let prigeex = PrigeeXFactory.load(FACTORY_ADDRESS)!
   let timestamp = event.block.timestamp.toI32()
   let dayID = timestamp / 86400
   let dayStartTimestamp = dayID * 86400
-  let uniswapDayData = UniswapDayData.load(dayID.toString())
-  if (!uniswapDayData) {
-    uniswapDayData = new UniswapDayData(dayID.toString())
-    uniswapDayData.date = dayStartTimestamp
-    uniswapDayData.dailyVolumeUSD = ZERO_BD
-    uniswapDayData.dailyVolumeETH = ZERO_BD
-    uniswapDayData.totalVolumeUSD = ZERO_BD
-    uniswapDayData.totalVolumeETH = ZERO_BD
-    uniswapDayData.dailyVolumeUntracked = ZERO_BD
+  let prigeexDayData = PrigeeXDayData.load(dayID.toString())
+  if (!prigeexDayData) {
+    prigeexDayData = new PrigeeXDayData(dayID.toString())
+    prigeexDayData.date = dayStartTimestamp
+    prigeexDayData.dailyVolumeUSD = ZERO_BD
+    prigeexDayData.dailyVolumeETH = ZERO_BD
+    prigeexDayData.totalVolumeUSD = ZERO_BD
+    prigeexDayData.totalVolumeETH = ZERO_BD
+    prigeexDayData.dailyVolumeUntracked = ZERO_BD
   }
 
-  uniswapDayData.totalLiquidityUSD = uniswap.totalLiquidityUSD
-  uniswapDayData.totalLiquidityETH = uniswap.totalLiquidityETH
-  uniswapDayData.txCount = uniswap.txCount
-  uniswapDayData.save()
+  prigeexDayData.totalLiquidityUSD = prigeex.totalLiquidityUSD
+  prigeexDayData.totalLiquidityETH = prigeex.totalLiquidityETH
+  prigeexDayData.txCount = prigeex.txCount
+  prigeexDayData.save()
 
-  return uniswapDayData as UniswapDayData
+  return prigeexDayData as PrigeeXDayData
 }
 
 export function updatePairDayData(pair: Pair, event: ethereum.Event): PairDayData {

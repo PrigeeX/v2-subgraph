@@ -9,7 +9,7 @@ import {
   Swap as SwapEvent,
   Token,
   Transaction,
-  UniswapFactory,
+  PrigeeXFactory,
 } from '../../../generated/schema'
 import { Burn, Mint, Swap, Sync, Transfer } from '../../../generated/templates/Pair/Pair'
 import { FACTORY_ADDRESS } from '../../common/chain'
@@ -19,7 +19,7 @@ import {
   updatePairDayData,
   updatePairHourData,
   updateTokenDayData,
-  updateUniswapDayData,
+  updatePrigeeXDayData,
 } from '../../common/hourDayUpdates'
 import { findEthPerToken, getEthPriceInUSD, getTrackedLiquidityUSD, getTrackedVolumeUSD } from '../../common/pricing'
 
@@ -33,7 +33,7 @@ export function handleTransfer(event: Transfer): void {
     return
   }
 
-  let factory = UniswapFactory.load(FACTORY_ADDRESS)!
+  let factory = PrigeeXFactory.load(FACTORY_ADDRESS)!
   let transactionHash = event.transaction.hash.toHexString()
 
   // user stats
@@ -204,10 +204,10 @@ export function handleSync(event: Sync): void {
   if (token0 === null || token1 === null) {
     return
   }
-  let uniswap = UniswapFactory.load(FACTORY_ADDRESS)!
+  let prigeex = PrigeeXFactory.load(FACTORY_ADDRESS)!
 
   // reset factory liquidity by subtracting onluy tarcked liquidity
-  uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
+  prigeex.totalLiquidityETH = prigeex.totalLiquidityETH.minus(pair.trackedReserveETH as BigDecimal)
 
   // reset token total liquidity amounts
   token0.totalLiquidity = token0.totalLiquidity.minus(pair.reserve0)
@@ -251,8 +251,8 @@ export function handleSync(event: Sync): void {
   pair.reserveUSD = pair.reserveETH.times(bundle.ethPrice)
 
   // use tracked amounts globally
-  uniswap.totalLiquidityETH = uniswap.totalLiquidityETH.plus(trackedLiquidityETH)
-  uniswap.totalLiquidityUSD = uniswap.totalLiquidityETH.times(bundle.ethPrice)
+  prigeex.totalLiquidityETH = prigeex.totalLiquidityETH.plus(trackedLiquidityETH)
+  prigeex.totalLiquidityUSD = prigeex.totalLiquidityETH.times(bundle.ethPrice)
 
   // now correctly set liquidity amounts for each token
   token0.totalLiquidity = token0.totalLiquidity.plus(pair.reserve0)
@@ -260,7 +260,7 @@ export function handleSync(event: Sync): void {
 
   // save entities
   pair.save()
-  uniswap.save()
+  prigeex.save()
   token0.save()
   token1.save()
 }
@@ -281,7 +281,7 @@ export function handleMint(event: Mint): void {
   }
 
   let pair = Pair.load(event.address.toHex())!
-  let uniswap = UniswapFactory.load(FACTORY_ADDRESS)!
+  let prigeex = PrigeeXFactory.load(FACTORY_ADDRESS)!
 
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
@@ -306,13 +306,13 @@ export function handleMint(event: Mint): void {
 
   // update txn counts
   pair.txCount = pair.txCount.plus(ONE_BI)
-  uniswap.txCount = uniswap.txCount.plus(ONE_BI)
+  prigeex.txCount = prigeex.txCount.plus(ONE_BI)
 
   // save entities
   token0.save()
   token1.save()
   pair.save()
-  uniswap.save()
+  prigeex.save()
 
   mint.sender = event.params.sender
   mint.amount0 = token0Amount as BigDecimal
@@ -324,7 +324,7 @@ export function handleMint(event: Mint): void {
   // update day entities
   updatePairDayData(pair, event)
   updatePairHourData(pair, event)
-  updateUniswapDayData(event)
+  updatePrigeeXDayData(event)
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
 }
@@ -345,7 +345,7 @@ export function handleBurn(event: Burn): void {
   }
 
   let pair = Pair.load(event.address.toHex())!
-  let uniswap = UniswapFactory.load(FACTORY_ADDRESS)!
+  let prigeex = PrigeeXFactory.load(FACTORY_ADDRESS)!
 
   //update token info
   let token0 = Token.load(pair.token0)
@@ -369,14 +369,14 @@ export function handleBurn(event: Burn): void {
     .times(bundle.ethPrice)
 
   // update txn counts
-  uniswap.txCount = uniswap.txCount.plus(ONE_BI)
+  prigeex.txCount = prigeex.txCount.plus(ONE_BI)
   pair.txCount = pair.txCount.plus(ONE_BI)
 
   // update global counter and save
   token0.save()
   token1.save()
   pair.save()
-  uniswap.save()
+  prigeex.save()
 
   // update burn
   // burn.sender = event.params.sender
@@ -390,7 +390,7 @@ export function handleBurn(event: Burn): void {
   // update day entities
   updatePairDayData(pair, event)
   updatePairHourData(pair, event)
-  updateUniswapDayData(event)
+  updatePrigeeXDayData(event)
   updateTokenDayData(token0 as Token, event)
   updateTokenDayData(token1 as Token, event)
 }
@@ -461,17 +461,17 @@ export function handleSwap(event: Swap): void {
   pair.save()
 
   // update global values, only used tracked amounts for volume
-  let uniswap = UniswapFactory.load(FACTORY_ADDRESS)!
-  uniswap.totalVolumeUSD = uniswap.totalVolumeUSD.plus(trackedAmountUSD)
-  uniswap.totalVolumeETH = uniswap.totalVolumeETH.plus(trackedAmountETH)
-  uniswap.untrackedVolumeUSD = uniswap.untrackedVolumeUSD.plus(derivedAmountUSD)
-  uniswap.txCount = uniswap.txCount.plus(ONE_BI)
+  let prigeex = PrigeeXFactory.load(FACTORY_ADDRESS)!
+  prigeex.totalVolumeUSD = prigeex.totalVolumeUSD.plus(trackedAmountUSD)
+  prigeex.totalVolumeETH = prigeex.totalVolumeETH.plus(trackedAmountETH)
+  prigeex.untrackedVolumeUSD = prigeex.untrackedVolumeUSD.plus(derivedAmountUSD)
+  prigeex.txCount = prigeex.txCount.plus(ONE_BI)
 
   // save entities
   pair.save()
   token0.save()
   token1.save()
-  uniswap.save()
+  prigeex.save()
 
   let transaction = Transaction.load(event.transaction.hash.toHexString())
   if (transaction === null) {
@@ -515,15 +515,15 @@ export function handleSwap(event: Swap): void {
   // update day entities
   let pairDayData = updatePairDayData(pair, event)
   let pairHourData = updatePairHourData(pair, event)
-  let uniswapDayData = updateUniswapDayData(event)
+  let prigeexDayData = updatePrigeeXDayData(event)
   let token0DayData = updateTokenDayData(token0 as Token, event)
   let token1DayData = updateTokenDayData(token1 as Token, event)
 
   // swap specific updating
-  uniswapDayData.dailyVolumeUSD = uniswapDayData.dailyVolumeUSD.plus(trackedAmountUSD)
-  uniswapDayData.dailyVolumeETH = uniswapDayData.dailyVolumeETH.plus(trackedAmountETH)
-  uniswapDayData.dailyVolumeUntracked = uniswapDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
-  uniswapDayData.save()
+  prigeexDayData.dailyVolumeUSD = prigeexDayData.dailyVolumeUSD.plus(trackedAmountUSD)
+  prigeexDayData.dailyVolumeETH = prigeexDayData.dailyVolumeETH.plus(trackedAmountETH)
+  prigeexDayData.dailyVolumeUntracked = prigeexDayData.dailyVolumeUntracked.plus(derivedAmountUSD)
+  prigeexDayData.save()
 
   // swap specific updating for pair
   pairDayData.dailyVolumeToken0 = pairDayData.dailyVolumeToken0.plus(amount0Total)

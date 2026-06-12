@@ -1,6 +1,6 @@
 specVersion: 0.0.8
-description: Uniswap is a decentralized protocol for automated token exchange on Ethereum.
-repository: https://github.com/Uniswap/uniswap-v2-subgraph
+description: PrigeeX is a decentralized protocol for automated token exchange on Arbitrum.
+repository: https://github.com/PrigeeX/v2-subgraph
 schema:
   file: ./src/v2-tokens/schema.graphql
 dataSources:
