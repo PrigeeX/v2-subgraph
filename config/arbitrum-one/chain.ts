@@ -1,16 +1,15 @@
 import { Address, BigDecimal, BigInt } from '@graphprotocol/graph-ts/index'
 
-// PLACEHOLDER — PrigeeX V2 Factory on Arbitrum One is not deployed yet.
-// Replace with V2_FACTORY_ADDRESS from DeployV2.s.sol before deploying this subgraph.
-export const FACTORY_ADDRESS = '0x000000000000000000000000000000000000b001'
+// PrigeeXV2Factory on Arbitrum One (release 1.0.0, created at block 511345156)
+export const FACTORY_ADDRESS = '0xe2e3e4ac1ecbf4caf90d32641ba09e625e6238ef'
 
 // Canonical WETH on Arbitrum One
 export const REFERENCE_TOKEN = '0x82af49447d8a07e3bd95bd0d56f35241523fbab1'
 
-// PLACEHOLDER — PrigeeX-owned WETH/USDC v2 pair used as the pricing reference.
-// Not deployed yet (Uniswap's pool won't reflect PrigeeX prices). Replace once
-// the PrigeeX V2 WETH/USDC pair is created on Arbitrum One.
-export const STABLE_TOKEN_PAIRS = ['0x000000000000000000000000000000000000b002']
+// PrigeeX V2 WETH/USDC (native) pair used as the pricing reference. Not created yet:
+// this is its CREATE2 address (factory + pair init code hash 0x1edb3e24…431aa8), so USD
+// pricing starts as soon as the pair is created and seeded.
+export const STABLE_TOKEN_PAIRS = ['0x06c98b073a0ecf2d06ff0d0c828d1ed76537e317']
 
 // token where amounts should contribute to tracked volume and liquidity
 export const WHITELIST: string[] = [
